@@ -1,0 +1,28 @@
+#!/bin/sh
+
+case "$*" in
+    *"RUNNING general"*)
+        echo running
+        ;;
+    *"DEVICE,TYPE,STATE device status"*)
+        echo 'wlan0:wifi:connected'
+        ;;
+    *"GENERAL.STATE,GENERAL.CONNECTION,IP4.ADDRESS,IP4.GATEWAY,IP4.DNS device show"*)
+        echo 'GENERAL.STATE:100 (connected)'
+        echo 'GENERAL.CONNECTION:Lab WiFi'
+        echo 'IP4.ADDRESS[1]:192.0.2.20/24'
+        echo 'IP4.GATEWAY:192.0.2.1'
+        echo 'IP4.DNS[1]:192.0.2.53'
+        echo 'IP4.DNS[2]:198.51.100.53'
+        ;;
+    *"device wifi list"*)
+        echo '*:Lab WiFi:11:WPA2:87'
+        echo ':Cafe\:Guest:6::54'
+        ;;
+    *"device wifi rescan"*)
+        ;;
+    *)
+        echo "Unexpected fake nmcli call: $*" >&2
+        exit 1
+        ;;
+esac
