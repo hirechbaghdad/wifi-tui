@@ -1,0 +1,17 @@
+# Sources, scripts and makefiles must keep LF endings: a CRLF shebang makes
+# /bin/sh on FreeBSD and Linux fail with a confusing "not found", and BSD make
+# chokes on CRLF recipes.
+*.c              text eol=lf
+*.h              text eol=lf
+*.sh             text eol=lf
+*.md             text eol=lf
+*.1              text eol=lf
+Makefile         text eol=lf
+LICENSE          text eol=lf
+.gitignore       text eol=lf
+.gitattributes   text eol=lf
+tests/fake-bin/*         text eol=lf
+FreeBSD/tests/fake-bin/* text eol=lf
+FreeBSD/tests/resolv.conf text eol=lf
+
+*.png binary

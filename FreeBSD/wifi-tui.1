@@ -1,0 +1,193 @@
+.Dd August 17, 2026
+.Dt WIFI-TUI 1
+.Os
+.Sh NAME
+.Nm wifi-tui
+.Nd interactive terminal Wi-Fi controller
+.Sh SYNOPSIS
+.Nm
+.Sh DESCRIPTION
+.Nm
+is a full-screen
+.Xr ncurses 3
+front end for the wireless plumbing in the FreeBSD base system.
+It lists nearby access points, associates with open, WPA2-PSK, WPA3-SAE and
+WEP networks, handles hidden SSIDs, and shows the current IPv4 address,
+netmask, default gateway and DNS servers.
+.Pp
+.Nm
+does not talk to the kernel directly.
+It drives the same programs an administrator would use by hand:
+.Bl -tag -width "resolv.conf" -offset indent
+.It Xr wpa_cli 8
+scanning, association and saved network profiles
+.It Xr ifconfig 8
+wireless interface discovery, IPv4 address and netmask
+.It Xr netstat 1
+the default gateway for the interface
+.It Pa /etc/resolv.conf
+the list of DNS servers
+.It Xr dhclient 8
+DHCP, and only when the interface has no IPv4 address after associating
+.El
+.Pp
+The wireless interface is chosen automatically: the
+.Dq wlan
+interface group is consulted first, and an interface that is already
+associated wins over one that is merely present.
+.Ss Keys
+.Bl -tag -width "Home / End, PgUp / PgDn" -offset indent
+.It Ic Up No / Ic Down
+Select a network.
+.It Ic Left No / Ic Right
+Move the focus between the network list and the status panel.
+.It Ic Enter
+Connect to the selected network.
+.It Ic a
+Add or connect to a custom or hidden SSID.
+.It Ic r
+Rescan for nearby networks.
+.It Ic d
+Disconnect the wireless interface.
+.It Ic Home No / Ic End , Ic PgUp No / Ic PgDn
+Move through a long list.
+.It Ic q
+Quit.
+.El
+.Ss Connecting
+When the selected SSID already has a profile in
+.Xr wpa_supplicant.conf 5 ,
+.Nm
+activates it and never asks for a passphrase.
+Otherwise it prompts, creates a new network with
+.Cm add_network ,
+and selects it.
+Passphrases are handed to
+.Xr wpa_cli 8
+over standard input rather than on the command line, so they do not appear in
+.Xr ps 1
+output.
+A 64 digit hexadecimal PSK, or a 10 or 26 digit hexadecimal WEP key, is passed
+through as a raw key instead of a passphrase.
+.Pp
+A newly created profile lives only in the running supplicant unless
+.Va update_config Ns = Ns Li 1
+is set in
+.Xr wpa_supplicant.conf 5 ;
+.Nm
+reports which of the two happened.
+.Pp
+Because
+.Cm select_network
+disables every other profile, a failed association is followed by
+.Cm enable_network all
+and
+.Cm reconnect
+so that the machine returns to normal roaming.
+.Pp
+WPA Enterprise
+.Pq 802.1X
+networks are not configurable from the interface.
+They need an
+.Va eap ,
+.Va identity
+and
+.Va password
+block in
+.Xr wpa_supplicant.conf 5 ;
+once that exists,
+.Nm
+activates the profile like any other.
+.Ss Read-only mode
+If the
+.Xr wpa_supplicant 8
+control socket cannot be reached,
+.Nm
+falls back to listing the
+.Xr net80211 4
+scan cache through
+.Ic ifconfig Ar interface Cm list scan .
+The header shows
+.Dq ifconfig (read-only)
+and connecting and disconnecting are refused.
+This is what a missing or unstarted supplicant looks like, not an error in
+itself.
+.Sh ENVIRONMENT
+Both variables are ignored when the process is running set-user-ID or
+set-group-ID, as reported by
+.Xr issetugid 2 .
+.Bl -tag -width "WIFI_TUI_RESOLV_CONF"
+.It Ev WIFI_TUI_RESOLV_CONF
+Path to the resolver configuration to read DNS servers from.
+Defaults to
+.Pa /etc/resolv.conf .
+.It Ev WIFI_TUI_WPA_CTRL
+Control socket directory passed to
+.Xr wpa_cli 8
+as
+.Fl p .
+Defaults to letting
+.Xr wpa_cli 8
+choose, which is
+.Pa /var/run/wpa_supplicant .
+.El
+.Sh FILES
+.Bl -tag -width "/etc/wpa_supplicant.conf" -compact
+.It Pa /etc/wpa_supplicant.conf
+supplicant configuration and saved networks
+.It Pa /etc/resolv.conf
+DNS servers shown in the status panel
+.It Pa /var/run/wpa_supplicant
+control socket directory
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+Configure the interface once in
+.Xr rc.conf 5 ,
+replacing
+.Li iwlwifi0
+with the wireless device from
+.Ic sysctl net.wlan.devices :
+.Bd -literal -offset indent
+wlans_iwlwifi0="wlan0"
+ifconfig_wlan0="WPA SYNCDHCP"
+.Ed
+.Pp
+Allow the
+.Li wheel
+group to use the control socket, in
+.Xr wpa_supplicant.conf 5 :
+.Bd -literal -offset indent
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=wheel
+update_config=1
+.Ed
+.Pp
+Then run
+.Nm
+as an ordinary user in that group.
+.Sh SEE ALSO
+.Xr netstat 1 ,
+.Xr net80211 4 ,
+.Xr rc.conf 5 ,
+.Xr wpa_supplicant.conf 5 ,
+.Xr dhclient 8 ,
+.Xr ifconfig 8 ,
+.Xr wpa_cli 8 ,
+.Xr wpa_supplicant 8
+.Sh AUTHORS
+.An HIRECHE BAGHDAD BELKHEIR
+.Sh CAVEATS
+Triggering a scan and changing the supplicant's configuration both require
+access to the control socket.
+Without it
+.Nm
+starts in read-only mode.
+Running the program under
+.Xr sudo 8
+works but is rarely necessary; adding your account to the group named by
+.Va ctrl_interface_group
+is the better arrangement.
+.Pp
+Only IPv4 addressing is displayed.

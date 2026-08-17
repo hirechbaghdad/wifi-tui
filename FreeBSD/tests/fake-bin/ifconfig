@@ -1,0 +1,39 @@
+#!/bin/sh
+# Fake ifconfig(8) for the smoke test: a laptop with one wlan0 associated to
+# "Lab WiFi" on 192.0.2.20/24.
+
+case "$*" in
+    "-g wlan")
+        echo wlan0
+        ;;
+    "-l")
+        echo "em0 lo0 wlan0"
+        ;;
+    "wlan0")
+        printf 'wlan0: flags=8843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST> metric 0 mtu 1500\n'
+        printf '\tether 00:11:22:33:44:aa\n'
+        printf '\tinet 192.0.2.20 netmask 0xffffff00 broadcast 192.0.2.255\n'
+        printf '\tgroups: wlan\n'
+        printf '\tssid "Lab WiFi" channel 11 (2462 MHz 11g ht/20) bssid 00:11:22:33:44:55\n'
+        printf '\tregdomain FCC country US authmode WPA2/802.11i privacy ON\n'
+        printf '\tmedia: IEEE 802.11 Wireless Ethernet OFDM/54Mbps mode 11g\n'
+        printf '\tstatus: associated\n'
+        printf '\tnd6 options=29<PERFORMNUD,IFDISABLED,AUTO_LINKLOCAL>\n'
+        ;;
+    "em0"|"lo0")
+        printf '%s: flags=8843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST> metric 0 mtu 1500\n' "$1"
+        printf '\tmedia: Ethernet autoselect\n'
+        printf '\tstatus: no carrier\n'
+        ;;
+    "-v wlan0 list scan")
+        printf 'SSID/MESH ID                      BSSID              CHAN RATE    S:N     INT CAPS\n'
+        printf 'Lab WiFi                          00:11:22:33:44:55    11   54M -47:-95  100 EP   RSN HTCAP WME\n'
+        printf 'Cafe Guest                        00:11:22:33:44:66     6   54M -72:-95  100 ES   WME\n'
+        ;;
+    "wlan0 scan")
+        ;;
+    *)
+        echo "Unexpected fake ifconfig call: $*" >&2
+        exit 1
+        ;;
+esac

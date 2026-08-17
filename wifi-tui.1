@@ -1,0 +1,100 @@
+.Dd August 17, 2026
+.Dt WIFI-TUI 1
+.Os
+.Sh NAME
+.Nm wifi-tui
+.Nd interactive terminal Wi-Fi controller
+.Sh SYNOPSIS
+.Nm
+.Sh DESCRIPTION
+.Nm
+is a full-screen
+.Xr ncurses 3
+front end for NetworkManager.
+It lists nearby access points, connects to open and secured networks, handles
+hidden and custom SSIDs, and shows the current IPv4 address, netmask, default
+gateway and DNS servers.
+.Pp
+This is the Linux build, written for Debian 13 and any other system where
+NetworkManager manages the wireless device.
+All state is read and changed through
+.Xr nmcli 1 ;
+.Nm
+never talks to the kernel or to
+.Xr wpa_supplicant 8
+directly.
+A FreeBSD build that drives
+.Xr wpa_cli 8
+and
+.Xr ifconfig 8
+instead lives in the
+.Pa FreeBSD
+subdirectory of the source tree.
+.Pp
+The wireless interface is chosen automatically: the first NetworkManager
+device of type
+.Dq wifi
+that is connected wins, otherwise the first one present.
+.Ss Keys
+.Bl -tag -width "Home / End, PgUp / PgDn" -offset indent
+.It Ic Up No / Ic Down
+Select a network.
+.It Ic Left No / Ic Right
+Move the focus between the network list and the status panel.
+.It Ic Enter
+Connect to the selected network.
+.It Ic a
+Add or connect to a custom or hidden SSID.
+.It Ic r
+Rescan for nearby networks.
+.It Ic d
+Disconnect the wireless interface.
+.It Ic Home No / Ic End , Ic PgUp No / Ic PgDn
+Move through a long list.
+.It Ic q
+Quit.
+.El
+.Ss Connecting
+.Nm
+first tries to activate the network without supplying credentials, which
+succeeds when NetworkManager already has a saved profile for it.
+Only if that fails does it prompt for a password and retry.
+The password is written to
+.Xr nmcli 1
+on standard input rather than passed as an argument, so it does not appear in
+.Xr ps 1
+output.
+.Pp
+WPA Enterprise
+.Pq 802.1X
+networks are detected and refused.
+Configure them first with
+.Xr nmtui 1
+or
+.Nm nm-connection-editor ;
+once a profile exists,
+.Nm
+activates it like any other.
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+Check that NetworkManager owns the wireless device before starting:
+.Bd -literal -offset indent
+nmcli device status
+.Ed
+.Sh SEE ALSO
+.Xr nmcli 1 ,
+.Xr nmtui 1 ,
+.Xr NetworkManager 8
+.Sh AUTHORS
+.An HIRECHE BAGHDAD BELKHEIR
+.Sh CAVEATS
+Run
+.Nm
+as your ordinary desktop user.
+NetworkManager and Polkit may ask for authorization depending on system
+policy; running the whole program under
+.Xr sudo 8
+just to connect to Wi-Fi is neither necessary nor advisable.
+.Pp
+Only IPv4 addressing is displayed.
