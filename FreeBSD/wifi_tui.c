@@ -30,6 +30,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+/* AF_INET lives in <sys/socket.h> here. glibc's <arpa/inet.h> drags it in via
+   <netinet/in.h>, FreeBSD's does not -- do not drop this as redundant. */
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
